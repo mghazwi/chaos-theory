@@ -143,6 +143,7 @@ pub fn main() {
 
     // unimplemented!();
     let g1 = G1Projective::generator();
+
     let divs = { Bls12_381::pairing(blob.rec_pk, blob.s) };
 
     let hash_c = blob.c.hash_to_curve();
@@ -151,6 +152,8 @@ pub fn main() {
     let paired_msg = ups-divs;
     // let pmsg = { Bls12_381::multi_pairing(blob.c.1, hash_c, blob.rec_pk, blob.s) };
     // println!("paired msg: {}", paired_msg);
+
+    let m1 = Message(g1.mul(Fr::from(12988u32)).into_affine());
 
     let sk = Fr::from(8718712u64);
     let pk = g1.mul(sk).into_affine();
@@ -162,7 +165,7 @@ pub fn main() {
 
     let r = Receiver{pk:pk2};
 
-    let c = s.send(messages[0], &r);
+    let c = s.send(m1, &r);
     let ch = c.hash_to_curve();
 
     let a = s.authenticate(&c);
@@ -175,11 +178,11 @@ pub fn main() {
 
     let a = { Bls12_381::pairing(g1, ch) };
 
-    let plain_back = baby_giant(64, &a, &mpp);
+    let plain_back = baby_giant(32, &a, &mpp);
 
     println!("plain back: {}", plain_back);
 
-    let pmi = { Bls12_381::pairing(messages[0].0, ch) };
+    let pmi = { Bls12_381::pairing(m1.0, ch) };
 
     if mpp == pmi {
         println!("match")
