@@ -137,6 +137,8 @@ pub fn main() {
         i+=1;
     }
 
+    // spoiler alert the plaintext msg is: 8492374892742
+
     /* End of attack */
 }
 
