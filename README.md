@@ -1,18 +1,11 @@
-# puzzle-chaos-theory
+# puzzle-chaos-theory-solution
 
-**DO NOT FORK THE REPOSITORY, AS IT WILL MAKE YOUR SOLUTION PUBLIC. INSTEAD, CLONE IT AND ADD A NEW REMOTE TO A PRIVATE REPOSITORY, OR SUBMIT A GIST**
+Solution to the [zkhack IV](https://zkhack.dev/zkhackIV) 3rd puzzle. 
 
-Trying it out
+How to run
 =============
 
 Use `cargo run --release` to see it in action
-
-Submitting a solution
-=====================
-
-[Submit a solution](https://xng1lsio92y.typeform.com/to/UYMwUsgG)
-
-[Submit a write-up](https://xng1lsio92y.typeform.com/to/NGwTHlVz)
 
 Puzzle description
 ==================

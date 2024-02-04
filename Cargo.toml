@@ -1,5 +1,6 @@
 [package]
-name = "zkhack-puzzle-to-publish"
+name = "zkhack-puzzle-solution"
+author = "Mohammed Alghazwi"
 version = "0.1.0"
 edition = "2021"
 
