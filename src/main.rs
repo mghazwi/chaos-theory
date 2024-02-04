@@ -1,14 +1,13 @@
 use ark_bls12_381::{g2::Config, Bls12_381, Fr, G1Affine, G1Projective, G2Affine, G2Projective};
 use ark_ec::{
     hashing::{curve_maps::wb::WBMap, map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve},
-    pairing::{Pairing, PairingOutput},
+    pairing::Pairing,
     CurveGroup, Group,
 };
 use ark_ff::field_hashers::DefaultFieldHasher;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use sha2::Sha256;
 use std::{fs::File, io::Read, ops::Mul};
-use std::collections::HashMap;
 
 use prompt::{puzzle, welcome};
 
@@ -83,7 +82,7 @@ pub struct Blob {
     pub rec_pk: G1Affine,
 }
 
-fn generate_message_space() -> [Message; 10] {
+fn generate_message_space() -> ([u64; 10],[Message; 10]) {
     let g1 = G1Projective::generator();
     let msgs = [
         390183091831u64,
@@ -97,39 +96,19 @@ fn generate_message_space() -> [Message; 10] {
         99084321987189371,
         8427489729843712893,
     ];
-    msgs.iter()
+    let g_m = msgs.iter()
         .map(|&msg_i| Message(g1.mul(Fr::from(msg_i)).into_affine()))
         .collect::<Vec<_>>()
         .try_into()
-        .unwrap()
-}
-
-pub fn baby_giant(max_bitwidth: u64, a: &PairingOutput<Bls12_381>, b: &PairingOutput<Bls12_381>) -> u64 {
-    let m = 1u64 << (max_bitwidth / 2);
-
-    let mut table = HashMap::new();
-    for j in 0u64..m {
-        let v = a.mul(Fr::from(j));//.into_affine();
-        table.insert(v, j);
-    }
-    let am = a.mul(Fr::from(m));//.into_affine();
-    let mut gamma = b.clone();
-
-    for i in 0u64..m {
-        if let Some(j) = table.get(&gamma) {
-            return i*m + j;
-        }
-        gamma = gamma - &am;//.into_affine();
-    }
-
-    panic!("No discrete log found");
+        .unwrap();
+    return (msgs,g_m); // modified to return the u64 msgs just for display purposes. 
 }
 
 pub fn main() {
     welcome();
     puzzle(PUZZLE_DESCRIPTION);
 
-    let messages = generate_message_space();
+    let (msgs_u64,messages) = generate_message_space();
 
     let mut file = File::open("blob.bin").unwrap();
     let mut data = Vec::new();
@@ -141,61 +120,22 @@ pub fn main() {
 
     /* Implement your attack here, to find the index of the encrypted message */
 
-    // unimplemented!();
-    let g1 = G1Projective::generator();
-
     let divs = { Bls12_381::pairing(blob.rec_pk, blob.s) };
 
     let hash_c = blob.c.hash_to_curve();
     let ups = { Bls12_381::pairing(blob.c.1, hash_c) };
 
     let paired_msg = ups-divs;
-    // let pmsg = { Bls12_381::multi_pairing(blob.c.1, hash_c, blob.rec_pk, blob.s) };
-    // println!("paired msg: {}", paired_msg);
 
-    let m1 = Message(g1.mul(Fr::from(12988u32)).into_affine());
-
-    let sk = Fr::from(8718712u64);
-    let pk = g1.mul(sk).into_affine();
-
-    let s =  Sender { sk,pk};
-
-    let sk2 =  Fr::from(87183453u64);
-    let pk2 = g1.mul(sk2).into_affine();
-
-    let r = Receiver{pk:pk2};
-
-    let c = s.send(m1, &r);
-    let ch = c.hash_to_curve();
-
-    let a = s.authenticate(&c);
-
-    let u1 = { Bls12_381::pairing(c.1, ch) };
-
-    let d1 = { Bls12_381::pairing(pk2, a) };
-
-    let mpp = u1-d1;
-
-    let a = { Bls12_381::pairing(g1, ch) };
-
-    let plain_back = baby_giant(32, &a, &mpp);
-
-    println!("plain back: {}", plain_back);
-
-    let pmi = { Bls12_381::pairing(m1.0, ch) };
-
-    if mpp == pmi {
-        println!("match")
-    }
-
-
-    for msg in messages {
+    // assuming the msg space is limitd to that returned by the function "generate_message_space"
+    let mut i=0;
+    for msg in messages { 
         let pmi = { Bls12_381::pairing(msg.0, hash_c) };
         if paired_msg == pmi {
-            println!("msg found = {}", msg.0);
+            println!("msg found = {}", msgs_u64[i]);
         }
+        i+=1;
     }
-    // println!("msg not found");
 
     /* End of attack */
 }
